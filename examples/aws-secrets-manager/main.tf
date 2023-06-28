@@ -54,7 +54,7 @@ resource "confluent_service_account" "example-sa" {
 ####
 module "api-key-rotation" {
     source  = "nerdynick/api-key-rotation/confluent"
-    version = "0.0.1"
+    version = "0.1.0"
 
     #Required Inputs
     owner = {
