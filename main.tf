@@ -7,9 +7,6 @@ terraform {
     }
 }
 
-provider "confluent" {
-}
-
 locals {
     now = timestamp()
     ttl_in_hours = var.roll_ttl_days*24
@@ -24,7 +21,7 @@ resource "time_rotating" "api_key_rotations" {
     count = var.num_keys_to_retain
     rotation_days = var.roll_ttl_days*var.num_keys_to_retain
 
-    rfc3339 = timeadd(local.now, format("-%sh", (count.index+1)*local.ttl_in_hours))
+    rfc3339 = timeadd(local.now, format("-%sh", (count.index)*local.ttl_in_hours))
 }
 
 # We stash the value in a static store in order to trigger a `replace_triggered_by` on the API Key
@@ -41,7 +38,7 @@ resource "time_static" "api_key_rotations" {
 ####
 resource "confluent_api_key" "kafka-api-key" {
     count = var.num_keys_to_retain
-    display_name = replace(var.key_display_name, "{date}", time_static.api_key_rotations[count.index])
+    display_name = replace(var.key_display_name, "{date}", time_static.api_key_rotations[count.index].rfc3339)
     description  = "API Key managed by Terraform using Confluent API Key Rotation Module"
 
     owner {
